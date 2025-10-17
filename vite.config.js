@@ -1,20 +1,17 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api/leetcode': {
-        target: 'https://leetcode-stats-api.vercel.app/',
+      // Forward ALL /api/* to your backend on :4000
+      "/api": {
+        target: "http://localhost:4000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/leetcode/, ''),
-      },
-      '/api/cf': {
-        target: 'https://codeforces.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/cf/, ''),
+        secure: false,
       },
     },
   },

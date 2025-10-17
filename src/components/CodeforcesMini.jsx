@@ -1,19 +1,38 @@
+// src/components/CodeforcesMini.jsx
 import { useQuery } from "@tanstack/react-query";
 import PlatformMiniCard from "./PlatformMiniCard";
-import { fetchCfRatingSummary } from "../lib/adapters/codeforces";
+
+// Backend adapter: { handle, rating, maxRating, rank, contests, solvedCount, history: [...] }
+async function getJSON(url) {
+  const res = await fetch(url, { headers: { "Cache-Control": "no-cache" } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+async function fetchCfSummary(handle) {
+  return getJSON(`/api/codeforces/${encodeURIComponent(handle)}/summary`);
+}
 
 export default function CodeforcesMini({ handle }) {
   const { data, isLoading } = useQuery({
     queryKey: ["cf-mini", handle],
-    queryFn: () => fetchCfRatingSummary(handle),
+    queryFn: () => fetchCfSummary(handle),
     enabled: !!handle,
-  }); // enabled delays query until handle is truthy [2][1][5]
+    staleTime: 10 * 60_000,
+  });
 
-  const cur = isLoading ? "…" : String(data?.current ?? 0); // safe default [2]
-  const max = isLoading ? "…" : String(data?.max ?? 0); // safe default [2]
-  const d30 = isLoading
-    ? "…"
-    : `${(data?.delta30 ?? 0) >= 0 ? "+" : ""}${data?.delta30 ?? 0}`; // proper template literal [6][9]
+  // Compute Δ30d from history on the client (cheap) if backend doesn’t include it explicitly
+  let delta30 = 0;
+  if (data?.history && data.history.length > 0) {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const day30 = nowSec - 30 * 24 * 3600;
+    const before = [...data.history].reverse().find(h => h.ratingUpdateTimeSeconds <= day30);
+    const current = data.history[data.history.length - 1].newRating ?? data.rating ?? 0;
+    delta30 = current - (before?.newRating ?? current);
+  }
+
+  const cur = isLoading ? "…" : String(data?.rating ?? 0);
+  const max = isLoading ? "…" : String(data?.maxRating ?? 0);
+  const d30 = isLoading ? "…" : `${delta30 >= 0 ? "+" : ""}${delta30}`;
 
   return (
     <PlatformMiniCard

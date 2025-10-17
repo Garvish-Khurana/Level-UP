@@ -25,6 +25,7 @@ element: (
 <AppLayout>
 <Dashboard />
 </AppLayout>
+
 ),
 },
 { path: "/missions", element: <AppLayout><Missions /></AppLayout> },

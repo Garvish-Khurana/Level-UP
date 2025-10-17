@@ -1,50 +1,26 @@
-import { ghGraphQL } from "../ghClient";
+async function getJSON(url) {
+  const res = await fetch(url, { headers: { "Cache-Control": "no-cache" } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
 
-export async function fetchGhContribSummary(username) {
-  const q = `
-    query($login: String!, $from: DateTime!, $to: DateTime!) {
-      user(login: $login) {
-        contributionsCollection(from: $from, to: $to) {
-          contributionCalendar {
-            totalContributions
-            weeks {
-              contributionDays {
-                date
-                contributionCount
-              }
-            }
-          }
-        }
-      }
-    }
-  `; // schema: contributionCalendar.weeks.contributionDays is valid [1][5]
+// Basic card data (already returned by backend)
+export async function fetchGhSummary(login) {
+  // { login, name, publicRepos, followers, stars, forks, eventsLast30Days }
+  return getJSON(`/api/github/${encodeURIComponent(login)}/summary`);
+}
 
+export async function fetchGhTodayWeekFromEvents(login) {
+  const events = await getJSON(`https://api.github.com/users/${encodeURIComponent(login)}/events?per_page=100`);
   const now = new Date();
-  const y = now.getUTCFullYear();
-  const m = now.getUTCMonth();
-  const d = now.getUTCDate();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const sevenDaysAgo = now.getTime() - 7 * 24 * 3600 * 1000;
 
-  // Full UTC day window
-  const start = new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
-  const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999)); // aligns with DateTime input [6]
-
-  const data = await ghGraphQL(q, {
-    login: username,
-    from: start.toISOString(),
-    to: end.toISOString(),
-  }); // contributionsCollection allows from/to, max 1 year span [3]
-
-  const weeks = data?.user?.contributionsCollection?.contributionCalendar?.weeks ?? [];
-  const days = weeks.flatMap((w) => w?.contributionDays ?? []); // flatten safely [1]
-
-  const isoDate = start.toISOString().slice(0, 10);
-  const today = days
-    .filter((day) => (day?.date ?? "").slice(0, 10) === isoDate)
-    .reduce((acc, day) => acc + Number(day?.contributionCount ?? 0), 0); // sum counts [1]
-
-  // Rolling 7-day window from whatever the API returned
-  const last7 = days.slice(-7);
-  const week = last7.reduce((acc, day) => acc + Number(day?.contributionCount ?? 0), 0); // rolling sum [5]
-
+  let today = 0, week = 0;
+  for (const e of events) {
+    const t = new Date(e.created_at).getTime();
+    if (t >= sevenDaysAgo) week++;
+    if (t >= startOfDay) today++;
+  }
   return { today, week };
 }

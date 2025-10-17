@@ -1,33 +1,81 @@
+// src/lib/adapters/leetcode.js
 async function getJson(url, init) {
   const res = await fetch(url, init);
-  if (!res.ok) throw new Error("LC fetch error"); // HTTP guard [10]
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-export async function fetchLcSummary(username) {
+// Fetch one year of calendar and parse to { date, count }[]
+export async function fetchLcCalendar(username, year = new Date().getUTCFullYear()) {
+  const cal = await getJson(`/api/leetcode/${encodeURIComponent(username)}/calendar/${year}`);
+  const raw = cal?.submissionCalendar ?? "{}";
+  const obj = typeof raw === "string" ? JSON.parse(raw || "{}") : (raw || {});
+  const days = Object.entries(obj)
+    .map(([sec, count]) => ({
+      date: new Date(Number(sec) * 1000).toISOString().slice(0, 10),
+      count: Number(count) || 0,
+    }))
+    .filter(d => d.date.startsWith(String(year)))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return { days, streak: Number(cal?.streak) || 0 };
+}
+
+// One-call dashboard; also attach current-year calendar as a baseline
+export async function fetchLcDashboard(username) {
+  const dash = await getJson(`/api/dashboard?${new URLSearchParams({ lc: username }).toString()}`);
+  const lc = dash?.leetcode || null;
+
+  const summary = await getJson(`/api/leetcode/${encodeURIComponent(username)}/summary`).catch(() => null);
+  const badges = summary?.badges || [];
+
+  let solved = { easy: 0, medium: 0, hard: 0, totalBank: {} };
   try {
-    const url = `/api/leetcode/${encodeURIComponent(username)}`; // ensure proxy maps this to upstream /<username> [10][1]
-    const data = await getJson(url);
+    const s = await fetch(`https://leetcode-stats-api.vercel.app/${encodeURIComponent(username)}`).then(r => r.json());
+    solved = {
+      easy: Number(s?.easySolved) || 0,
+      medium: Number(s?.mediumSolved) || 0,
+      hard: Number(s?.hardSolved) || 0,
+      totalBank: {
+        easy: Number(s?.totalEasy) || undefined,
+        medium: Number(s?.totalMedium) || undefined,
+        hard: Number(s?.totalHard) || undefined,
+      },
+    };
+  } catch {}
 
-    const easy =
-      data?.easySolved ??
-      data?.submitStatsGlobal?.acSubmissionNum?.find((x) => x?.difficulty === "Easy")?.count ??
-      0; // support both shapes [1]
+  const calendar = await fetchLcCalendar(username).catch(() => ({ days: [], streak: 0 }));
 
-    const medium =
-      data?.mediumSolved ??
-      data?.submitStatsGlobal?.acSubmissionNum?.find((x) => x?.difficulty === "Medium")?.count ??
-      0; // [1]
-
-    const hard =
-      data?.hardSolved ??
-      data?.submitStatsGlobal?.acSubmissionNum?.find((x) => x?.difficulty === "Hard")?.count ??
-      0; // [1]
-
-    const dailyDone = Boolean(data?.dailyQuestionDone || false); // optional convenience flag [1]
-
-    return { easy, medium, hard, dailyDone }; // normalized summary [1]
-  } catch {
-    return { easy: 0, medium: 0, hard: 0, dailyDone: false }; // graceful fallback [1]
+  if (!lc) {
+    return {
+      contests: { rating: null, globalRanking: null, attended: 0, topPercentage: null, totalParticipants: 0, history: [], meta: [], dist: [] },
+      solved,
+      badges,
+      calendar,
+    };
   }
+
+  return {
+    contests: {
+      rating: lc.rating ?? null,
+      globalRanking: lc.globalRanking ?? null,
+      attended: lc.attended ?? 0,
+      topPercentage: lc.topPercentage ?? null,
+      totalParticipants: lc.totalParticipants ?? 0,
+      history: lc.history || [],
+      meta: lc.meta || [],
+      dist: lc.dist || [],
+    },
+    solved,
+    badges,
+    calendar,
+  };
+}
+
+export async function fetchLcSummary(username) {
+  return getJson(`/api/leetcode/${encodeURIComponent(username)}/summary`);
+}
+
+export async function fetchLcDistribution() {
+  // returns { bins:[{start,end,count}], totalParticipants }
+  return getJson(`/api/leetcode/contest-distribution`);
 }
