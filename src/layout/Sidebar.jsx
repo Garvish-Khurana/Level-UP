@@ -8,10 +8,6 @@ return (
 <NavLink className={link} to="/missions">Missions</NavLink>
 <NavLink className={link} to="/penalty">Penalty Zone</NavLink>
 <NavLink className={link} to="/leaderboards">Leaderboards</NavLink>
-<div className="pt-2 text-xs uppercase tracking-widest text-slate-500">Platforms</div>
-<NavLink className={link} to="/platforms/leetcode">LeetCode</NavLink>
-<NavLink className={link} to="/platforms/codeforces">Codeforces</NavLink>
-<NavLink className={link} to="/platforms/github">GitHub</NavLink>
 <NavLink className={link} to="/settings">Settings</NavLink>
 </nav>
 </aside>

@@ -3,20 +3,15 @@ import AvatarUploader from "../components/AvatarUploader";
 import UserSummary from "../components/UserSummary";
 import MissionStrip from "../components/MissionStrip";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardKpis } from "../lib/mockApi"; // keep mock KPIs for now
+import { fetchDashboardKpis } from "../lib/mockApi";
 import KpiTile from "../components/KpiTile";
 import ExpMini from "../components/ExpMini";
-import ActivityHeatmap from "../components/ActivityHeatmap";
-import PlatformMiniCard from "../components/PlatformMiniCard";
-import DifficultyStack from "../components/DifficultyStack";
-import RatingBands from "../components/RatingBands";
-import ContestTimeline from "../components/ContestTimeline";
-import AchievementFeed from "../components/AchievementFeed";
-import GitHubMini from "../components/GitHubMini";
-import CodeforcesMini from "../components/CodeforcesMini";
-import LeetCodeMini from "../components/LeetCodeMini";
 import { settingsStore } from "../lib/settingsStore";
-import LeetCodeProfileCard from "../components/LeetCodeProfileCard";
+import LeetCodeProfileCard from "../components/leetcode/LeetCodeProfileCard";
+import CodeforcesProfileCard  from "../components/codeforces/CodeforcesProfileCard";
+import GitHub from "./GitHub";
+
+
 
 export default function Dashboard() {
   function KpiBand() {
@@ -42,18 +37,18 @@ export default function Dashboard() {
     );
   }
 
-  function PlatformMiniGrid() {
-    const ghUser = settingsStore.handles.github || "octocat";
-    const cfHandle = settingsStore.handles.codeforces || "tourist";
-    const lcUser = settingsStore.handles.leetcode || "leetcode";
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <LeetCodeMini username={lcUser} />
-        <CodeforcesMini handle={cfHandle} />
-        <GitHubMini username={ghUser} />
-      </div>
-    );
-  }
+  // function PlatformMiniGrid() {
+  //   const ghUser = settingsStore.handles.github || "octocat";
+  //   const cfHandle = settingsStore.handles.codeforces || "tourist";
+  //   const lcUser = settingsStore.handles.leetcode || "leetcode";
+  //   return (
+  //     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  //       <LeetCodeMini username={lcUser} />
+  //       <CodeforcesMini handle={cfHandle} />
+  //       <GitHubMini username={ghUser} />
+  //     </div>
+  //   );
+  // }
 
   const lcHandle = settingsStore.handles.leetcode || "leetcode"; // NEW
 
@@ -75,9 +70,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* LeetCode Profile Card hooked to backend via adapter */}
       <div>
-        <LeetCodeProfileCard username={lcHandle} /> {/* NEW: pass explicit handle */}
+        <LeetCodeProfileCard username={lcHandle} />
+      </div>
+      <div>
+        <CodeforcesProfileCard handle={settingsStore.handles.codeforces || "tourist"} />
+      </div>
+      <div>
+        <GitHub />
       </div>
 
       {/* Row 2: Heatmap (8 cols) + Platform mini-cards (4 cols) */}
@@ -89,18 +89,6 @@ export default function Dashboard() {
           <PlatformMiniGrid />
         </div>
       </div> */}
-
-      {/* Row 3: Depth & insights */}
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-8 space-y-6">
-          <DifficultyStack />
-          <RatingBands />
-        </div>
-        <div className="col-span-12 lg:col-span-4 space-y-6">
-          <ContestTimeline />
-          <AchievementFeed />
-        </div>
-      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default function PercentHistogram({
   paddingTop = 16,
   paddingBottom = 28,
   axisFontSize = 10,
-  markerFontSize = 10, // smaller to avoid clipping
+  markerFontSize = 10,
   barColor = "#475569",
   highlightBarColor = "#60a5fa",
   markerColor = "#ef4444",

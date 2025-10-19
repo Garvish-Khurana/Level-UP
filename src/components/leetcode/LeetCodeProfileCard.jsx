@@ -1,8 +1,8 @@
 // src/components/LeetCodeProfileCard.jsx
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchLcDashboard, fetchLcCalendar } from "../lib/adapters/leetcode";
-import { settingsStore } from "../lib/settingsStore";
+import { fetchLcDashboard, fetchLcCalendar } from "../../lib/adapters/leetcode";
+import { settingsStore } from "../../lib/settingsStore";
 import YearHeatmap from "./YearHeatmap";
 import PercentHistogram from "./PercentHistogram";
 
