@@ -4,7 +4,7 @@ import GitHubProfileCard from "../components/github/GitHubProfileCard";
 import { settingsStore } from "../lib/settingsStore";
 
 export default function GitHubPage() {
-  const login = settingsStore?.handles?.github || "octocat";
+  const login = settingsStore?.handles?.github || "Garvish-Khurana";
   return (
     <div className="space-y-4">
       <GitHubProfileCard login={login} />

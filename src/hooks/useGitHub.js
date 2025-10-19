@@ -12,10 +12,35 @@ export function useGitHubSummary(login) {
   });
 }
 
-export function useGitHubCalendar(login, year) {
+// export function useGitHubCalendar(login, year) {
+//   return useQuery({
+//     queryKey: ["gh-calendar", login, year],
+//     queryFn: () => ghFetchCalendar(login, year),
+//     enabled: !!login && !!year,
+//     staleTime: 10 * 60_000,
+//   });
+// }
+
+// export function useGitHubRepoRollup(login) {
+//   return useQuery({
+//     queryKey: ["gh-repos", login],
+//     queryFn: () => ghFetchRepoRollup(login),
+//     enabled: !!login,
+//     staleTime: 30 * 60_000,
+//   });
+// }
+
+export function useGitHubCalendar(login, year, opts = {}) {
+  const {
+    includePrivate = false,
+    range = "rolling",
+    from,
+    to,
+  } = opts;
+
   return useQuery({
-    queryKey: ["gh-calendar", login, year],
-    queryFn: () => ghFetchCalendar(login, year),
+    queryKey: ["gh-calendar", login, year, includePrivate, range, from || "", to || ""],
+    queryFn: () => ghFetchCalendar(login, year, includePrivate, { range, from, to }),
     enabled: !!login && !!year,
     staleTime: 10 * 60_000,
   });

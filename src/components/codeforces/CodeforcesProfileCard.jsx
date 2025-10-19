@@ -57,70 +57,74 @@ export default function CodeforcesProfileCard({ handle }) {
   const times = (cf.history || []).map((h) => Number(h.ratingUpdateTimeSeconds)).filter(Number.isFinite);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 text-zinc-100">
+    <div className="sl-window relative rounded-xl border border-cyan-400/20 bg-[radial-gradient(1200px_400px_at_-10%_-20%,rgba(56,189,248,0.08),transparent_60%),radial-gradient(800px_300px_at_110%_-30%,rgba(168,85,247,0.06),transparent_50%)] bg-slate-950/80 p-4 text-slate-100 shadow-[0_0_0_1px_rgba(56,189,248,0.15)_inset,0_10px_40px_-20px_rgba(56,189,248,0.35)]">
+      <div className="pointer-events-none absolute inset-0 [background:repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_3px)] rounded-xl" />
+      <div className="pointer-events-none absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[11px] uppercase tracking-wide text-zinc-400">Codeforces</div>
-          <div className="text-sm text-zinc-500">@{cf.handle || user}</div>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">System</div>
+          <div className="text-sm text-slate-400">Player @{cf.handle || user}</div>
         </div>
-        {isLoading ? <div className="text-xs text-zinc-500">Loading…</div> : null}
-        {error ? <div className="text-xs text-red-400">Fetch failed</div> : null}
+        {isLoading ? <div className="text-xs text-slate-400">Syncing…</div> : null}
+        {error ? <div className="text-xs text-amber-300">Signal lost</div> : null}
       </div>
 
       {/* Row 1: stats + rating line */}
       <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-lg bg-zinc-950/90 p-3 ring-1 ring-zinc-800">
+        <div className="rounded-lg bg-slate-950/80 p-3 ring-1 ring-cyan-400/20">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <div className="text-[11px] text-zinc-400">Current Rating</div>
-              <div className="text-2xl font-semibold text-zinc-100">{fmtNum(cf.rating)}</div>
+              <div className="text-[11px] text-cyan-300/70">Level</div>
+              <div className="text-2xl font-semibold text-slate-100">{fmtNum(cf.rating)}</div>
             </div>
             <div>
-              <div className="text-[11px] text-zinc-400">Max Rating</div>
-              <div className="text-base font-medium text-zinc-100">{fmtNum(cf.maxRating)}</div>
+              <div className="text-[11px] text-cyan-300/70">Max Level</div>
+              <div className="text-base font-medium text-slate-100">{fmtNum(cf.maxRating)}</div>
             </div>
             <div>
-              <div className="text-[11px] text-zinc-400">Rank</div>
-              <div className="text-base font-medium text-zinc-100">{cf.rank || "-"}</div>
+              <div className="text-[11px] text-cyan-300/70">Rank</div>
+              <div className="text-base font-medium text-slate-100">{cf.rank || "-"}</div>
             </div>
           </div>
           <InteractiveRatingChart values={ratings} times={times} />
         </div>
 
         {/* Counters + last contest */}
-        <div className="rounded-lg bg-zinc-950/90 p-3 ring-1 ring-zinc-800">
+        <div className="rounded-lg bg-slate-950/80 p-3 ring-1 ring-cyan-400/20">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-md bg-zinc-900/80 p-3 ring-1 ring-zinc-800">
-              <div className="text-[11px] text-zinc-400">Contests</div>
-              <div className="text-xl font-semibold text-zinc-100">{fmtNum(cf.contests)}</div>
-              <div className="mt-1 text-[11px] text-zinc-500">attended</div>
+            <div className="rounded-md bg-slate-900/70 p-3 ring-1 ring-cyan-400/20">
+              <div className="text-[11px] text-cyan-300/70">Raids</div>
+              <div className="text-xl font-semibold text-slate-100">{fmtNum(cf.contests)}</div>
+              <div className="mt-1 text-[11px] text-slate-400">attended</div>
             </div>
-            <div className="rounded-md bg-zinc-900/80 p-3 ring-1 ring-zinc-800">
-              <div className="text-[11px] text-zinc-400">Solved</div>
-              <div className="text-xl font-semibold text-zinc-100">{fmtNum(cf.solvedCount)}</div>
-              <div className="mt-1 text-[11px] text-zinc-500">unique problems</div>
+            <div className="rounded-md bg-slate-900/70 p-3 ring-1 ring-cyan-400/20">
+              <div className="text-[11px] text-cyan-300/70">Solved</div>
+              <div className="text-xl font-semibold text-slate-100">{fmtNum(cf.solvedCount)}</div>
+              <div className="mt-1 text-[11px] text-slate-400">unique problems</div>
             </div>
           </div>
 
           {/* Last contest summary */}
-          <div className="mt-3 rounded-md bg-zinc-900/60 p-3 ring-1 ring-zinc-800">
-            <div className="text-[11px] text-zinc-400">Last contest</div>
+          <div className="mt-3 rounded-md bg-slate-900/60 p-3 ring-1 ring-cyan-400/20">
+            <div className="text-[11px] text-cyan-300/70">Last Raid</div>
             {cf.history?.length ? (
               (() => {
                 const last = cf.history[cf.history.length - 1];
                 const delta = (last?.newRating ?? 0) - (last?.oldRating ?? 0);
                 return (
-                  <div className="mt-1 text-sm text-zinc-200">
+                  <div className="mt-1 text-sm text-slate-200">
                     <div className="line-clamp-1">{last?.contestName || "-"}</div>
-                    <div className="text-[11px] text-zinc-400">
-                      {fmtDate(last?.ratingUpdateTimeSeconds)} • {fmtNum(last?.oldRating)} → {fmtNum(last?.newRating)} ({delta >= 0 ? "+" : ""}{fmtNum(delta)})
+                    <div className="text-[11px] text-slate-400">
+                      {fmtDate(last?.ratingUpdateTimeSeconds)} • {fmtNum(last?.oldRating)} → {fmtNum(last?.newRating)}{" "}
+                      (<span className={delta >= 0 ? "text-emerald-400" : "text-rose-400"}>{delta >= 0 ? "+" : ""}{fmtNum(delta)}</span>)
                     </div>
                   </div>
                 );
               })()
             ) : (
-              <div className="mt-1 text-sm text-zinc-400">No contest history</div>
+              <div className="mt-1 text-sm text-slate-400">No raid history</div>
             )}
           </div>
         </div>
@@ -128,7 +132,7 @@ export default function CodeforcesProfileCard({ handle }) {
 
       {/* Row 2: Activity heatmap */}
       <div className="mt-3 grid grid-cols-1">
-        <div className="rounded-lg bg-zinc-950 p-3 ring-1 ring-zinc-800">
+        <div className="rounded-lg bg-slate-950/80 p-3 ring-1 ring-cyan-400/20">
           <YearHeatmap
             days={cal?.days || []}
             activeYear={calYear}
@@ -139,22 +143,22 @@ export default function CodeforcesProfileCard({ handle }) {
       </div>
 
       {/* Row 3: All previous contests */}
-      <div className="mt-3 rounded-lg bg-zinc-950 p-3 ring-1 ring-zinc-800">
+      <div className="mt-3 rounded-lg bg-slate-950/80 p-3 ring-1 ring-cyan-400/20">
         <div className="mb-2 flex items-center justify-between">
-          <div className="text-xs text-zinc-400">All contests</div>
-          <div className="text-[11px] text-zinc-500">{fmtNum(cf.history?.length || 0)} total</div>
+          <div className="text-xs text-cyan-300/70">Raid log</div>
+          <div className="text-[11px] text-slate-400">{fmtNum(cf.history?.length || 0)} total</div>
         </div>
         <div className="max-h-64 overflow-y-auto pr-1">
           {(cf.history || []).slice().reverse().map((h) => {
             const delta = (h.newRating ?? 0) - (h.oldRating ?? 0);
             return (
-              <div key={h.contestId} className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 last:border-0">
+              <div key={h.contestId} className="flex items-center justify-between py-1.5 border-b border-cyan-400/15 last:border-0">
                 <div className="min-w-0">
-                  <div className="text-sm text-zinc-200 truncate">{h.contestName}</div>
-                  <div className="text-[11px] text-zinc-400">{fmtDate(h.ratingUpdateTimeSeconds)}</div>
+                  <div className="text-sm text-slate-200 truncate">{h.contestName}</div>
+                  <div className="text-[11px] text-slate-400">{fmtDate(h.ratingUpdateTimeSeconds)}</div>
                 </div>
                 <div className="ml-3 text-right">
-                  <div className="text-sm text-zinc-200">{fmtNum(h.oldRating)} → {fmtNum(h.newRating)}</div>
+                  <div className="text-sm text-slate-200">{fmtNum(h.oldRating)} → {fmtNum(h.newRating)}</div>
                   <div className={`text-[11px] ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{delta >= 0 ? "+" : ""}{fmtNum(delta)}</div>
                 </div>
               </div>
@@ -166,7 +170,7 @@ export default function CodeforcesProfileCard({ handle }) {
   );
 }
 
-/* Compact CF rating line */
+/* Compact CF rating line (System colors) */
 function InteractiveRatingChart({ values = [], times = [] }) {
   const w = 560, h = 120, pad = 8, areaH = h - 2 * pad;
   const has = values?.length > 0;
@@ -195,17 +199,17 @@ function InteractiveRatingChart({ values = [], times = [] }) {
           {has && (
             <>
               <defs>
-                <linearGradient id="cfArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+                <linearGradient id="cfSystemArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.02" />
                 </linearGradient>
               </defs>
-              <path d={`${dLine} L ${pad + (values.length - 1) * step} ${h - pad} L ${pad} ${h - pad} Z`} fill="url(#cfArea)" />
-              <path d={dLine} stroke="#60a5fa" strokeWidth="2" fill="none" />
+              <path d={`${dLine} L ${pad + (values.length - 1) * step} ${h - pad} L ${pad} ${h - pad} Z`} fill="url(#cfSystemArea)" />
+              <path d={dLine} stroke="#22d3ee" strokeWidth="2" fill="none" />
               {point && (
                 <>
-                  <line x1={point.x} y1={pad} x2={point.x} y2={h - pad} stroke="#ffffff20" strokeWidth="1" />
-                  <circle cx={point.x} cy={point.y} r="3.4" fill="#fff" stroke="#60a5fa" strokeWidth="1.8" />
+                  <line x1={point.x} y1={pad} x2={point.x} y2={h - pad} stroke="#22d3ee30" strokeWidth="1" />
+                  <circle cx={point.x} cy={point.y} r="3.4" fill="#fff" stroke="#a78bfa" strokeWidth="1.8" />
                 </>
               )}
               {values.map((_, i) => (
@@ -226,10 +230,10 @@ function InteractiveRatingChart({ values = [], times = [] }) {
         </svg>
         {point && (
           <div
-            className="absolute -translate-x-1/2 -translate-y-full rounded-md bg-zinc-900/95 px-2 py-1 text-[10px] text-zinc-200 ring-1 ring-zinc-700"
+            className="absolute -translate-x-1/2 -translate-y-full rounded-md bg-slate-900/95 px-2 py-1 text-[10px] text-slate-200 ring-1 ring-cyan-700/40 backdrop-blur-sm"
             style={{ left: `${(point.x / w) * 100}%`, top: `${(point.y / h) * 100}%` }}>
             <div className="font-medium">Rating {fmtNum(point.rating)}</div>
-            <div className="text-zinc-400">{point.when ? fmtDate(point.when) : "Point"}</div>
+            <div className="text-slate-400">{point.when ? fmtDate(point.when) : "Point"}</div>
           </div>
         )}
       </div>

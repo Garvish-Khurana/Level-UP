@@ -30,9 +30,14 @@ export async function ghFetchSummary(login) {
   return getJSON(`/api/github/${encodeURIComponent(login)}/summary`);
 }
 
-export async function ghFetchCalendar(login, year, includePrivate = false) {
-  const qp = includePrivate ? "?private=1" : "";
-  return getJSON(`/api/github/${encodeURIComponent(login)}/calendar/${year}${qp}`);
+export async function ghFetchCalendar(login, year, includePrivate = false, opts = {}) {
+  const qs = new URLSearchParams();
+  qs.set("range", opts.range || "rolling");
+  if (includePrivate) qs.set("private", "1");
+  if (opts.from) qs.set("from", opts.from);
+  if (opts.to) qs.set("to", opts.to);
+  const url = `/api/github/${encodeURIComponent(login)}/calendar/${year}?${qs.toString()}`;
+  return getJSON(url);
 }
 
 export async function ghFetchRepoRollup(login) {

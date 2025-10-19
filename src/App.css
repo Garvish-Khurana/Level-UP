@@ -94,3 +94,19 @@
     flex-basis: 100%;
   }
 }
+/* Strengthen the holographic window rim without Tailwind config */
+.sl-window {
+  position: relative;
+  isolation: isolate;
+}
+.sl-window::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(600px 120px at 10% -10%, rgba(56,189,248,.10), transparent 60%),
+    radial-gradient(400px 120px at 90% -15%, rgba(168,85,247,.08), transparent 60%);
+  mask: linear-gradient(#000, #000) exclude, linear-gradient(#000, #000);
+}

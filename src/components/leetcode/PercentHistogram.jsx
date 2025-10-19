@@ -26,7 +26,20 @@ export default function PercentHistogram({
   showLabels = false,
   assumeNormalized = undefined,
   ratingRange = [800, 3500],
+
+  // Solo Leveling theme hooks (new, optional)
+  theme = "default",            // "default" | "system"
+  useGradient = false,          // holographic vertical fade
+  useGlow = false,              // soft glow on highlight + marker
+  labelVariant = "default",     // "default" | "system"
 }) {
+  // theme palette (computed, non-breaking)
+  const sys = theme === "system";
+  const cBar = sys ? "#0ea5e9" : barColor;          // cyan 500 for bars
+  const cHi  = sys ? "#22d3ee" : highlightBarColor; // cyan 300 for highlight
+  const cAx  = sys ? "#7dd3fc" : axisColor;         // cyan tick/axis
+  const cMk  = sys ? "#22d3ee" : markerColor;       // cyan marker line
+
   // unify padding vars
   const padL = paddingLeft, padR = paddingRight, padT = paddingTop, padB = paddingBottom;
   const innerW = width - padL - padR;
@@ -89,11 +102,15 @@ export default function PercentHistogram({
     return Math.max(padL, Math.min(padL + innerW, x));
   })();
 
+  const title = labelVariant === "system"
+    ? "System: rating distribution"
+    : "Rating distribution";
+
   return (
     <div className="mt-1">
       <div className="mb-4 flex items-baseline justify-between">
         <div className="text-xs text-zinc-400" style={{ fontFamily }}>
-          Rating distribution
+          {title}
           {Number.isFinite(rating) ? <> • current {Math.round(rating)}</> : null}
           {Number.isFinite(topPercent) ? <> • top {(Number(topPercent) <= 1 ? Number(topPercent) * 100 : Number(topPercent)).toFixed(2)}%</> : null}
         </div>
@@ -106,17 +123,44 @@ export default function PercentHistogram({
 
       <div className="relative">
         <svg width={width} height={height} role="img" aria-label="Contest rating histogram" style={{ overflow: "visible" }}>
+          {/* defs for gradient/glow when enabled */}
+          {(useGradient || useGlow) && (
+            <defs>
+              {useGradient && (
+                <>
+                  <linearGradient id="slBarNorm" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={cBar} stopOpacity="0.22" />
+                    <stop offset="100%" stopColor={cBar} stopOpacity="0.04" />
+                  </linearGradient>
+                  <linearGradient id="slBarHi" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={cHi} stopOpacity="0.28" />
+                    <stop offset="100%" stopColor={cHi} stopOpacity="0.06" />
+                  </linearGradient>
+                </>
+              )}
+              {useGlow && (
+                <filter id="slGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              )}
+            </defs>
+          )}
+
           {/* Axes */}
-          <line x1={padL} y1={padT + innerH} x2={padL + innerW} y2={padT + innerH} stroke={axisColor} strokeWidth={1} />
-          <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke={axisColor} strokeWidth={1} />
+          <line x1={padL} y1={padT + innerH} x2={padL + innerW} y2={padT + innerH} stroke={cAx} strokeWidth={1} />
+          <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke={cAx} strokeWidth={1} />
 
           {/* X ticks */}
           {xTickVals.map((v, i) => {
             const x = rx1 === rx0 ? padL : padL + ((v - rx0) / (rx1 - rx0)) * innerW;
             return (
               <g key={`xtick-${i}-${v}`}>
-                <line x1={x} y1={padT + innerH} x2={x} y2={padT + innerH + 6} stroke={axisColor} strokeWidth={1} />
-                <text x={x} y={padT + innerH + 18} textAnchor="middle" fontSize={axisFontSize} fill={axisColor} style={{ fontFamily }}>
+                <line x1={x} y1={padT + innerH} x2={x} y2={padT + innerH + 6} stroke={cAx} strokeWidth={1} />
+                <text x={x} y={padT + innerH + 18} textAnchor="middle" fontSize={axisFontSize} fill={cAx} style={{ fontFamily }}>
                   {v}
                 </text>
               </g>
@@ -128,8 +172,8 @@ export default function PercentHistogram({
             const y = yToPx(v);
             return (
               <g key={`ytick-${i}-${v}`}>
-                <line x1={padL - 6} y1={y} x2={padL} y2={y} stroke={axisColor} strokeWidth={1} />
-                <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={axisFontSize} fill={axisColor} style={{ fontFamily }}>
+                <line x1={padL - 6} y1={y} x2={padL} y2={y} stroke={cAx} strokeWidth={1} />
+                <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={axisFontSize} fill={cAx} style={{ fontFamily }}>
                   {v}
                 </text>
               </g>
@@ -143,7 +187,12 @@ export default function PercentHistogram({
             const w = Math.max(1, Math.abs(x1 - x0));
             const y = yToPx(b.count);
             const h = Math.max(0, padT + innerH - 2 - y); // 2px headroom
-            const fill = i === userBinIndex ? highlightBarColor : barColor;
+            const isUser = i === userBinIndex;
+
+            let fill = isUser ? cHi : cBar;
+            if (useGradient) fill = isUser ? "url(#slBarHi)" : "url(#slBarNorm)";
+            const filter = useGlow && isUser ? "url(#slGlow)" : undefined;
+
             return (
               <g key={`${b.start}-${b.end}`}>
                 <rect
@@ -154,6 +203,7 @@ export default function PercentHistogram({
                   fill={fill}
                   rx={2}
                   ry={2}
+                  filter={filter}
                   onMouseEnter={() => setHoverI(i)}
                   onMouseMove={() => setHoverI(i)}
                   onMouseLeave={() => setHoverI(-1)}
@@ -170,8 +220,17 @@ export default function PercentHistogram({
           {/* Current rating marker */}
           {markerX !== null && (
             <>
-              <line x1={markerX} y1={padT - 2} x2={markerX} y2={padT + innerH + 2} stroke={markerColor} strokeDasharray="4 3" strokeWidth={2} />
-              <text x={markerX} y={padT - 6} textAnchor="middle" fontSize={markerFontSize} fill={markerColor} style={{ fontFamily }}>
+              <line
+                x1={markerX}
+                y1={padT - 2}
+                x2={markerX}
+                y2={padT + innerH + 2}
+                stroke={cMk}
+                strokeDasharray="4 3"
+                strokeWidth={2}
+                filter={useGlow ? "url(#slGlow)" : undefined}
+              />
+              <text x={markerX} y={padT - 6} textAnchor="middle" fontSize={markerFontSize} fill={cMk} style={{ fontFamily }}>
                 {Math.round(rating)}
               </text>
             </>
@@ -188,7 +247,7 @@ export default function PercentHistogram({
         {/* Hover tooltip */}
         {hoverBin && (
           <div
-            className="pointer-events-none absolute rounded-md bg-zinc-900/95 px-2 py-1 text-[11px] text-zinc-200 ring-1 ring-zinc-700"
+            className={`pointer-events-none absolute rounded-md px-2 py-1 text-[11px] text-zinc-200 ring-1 backdrop-blur-sm ${sys ? "bg-slate-900/95 ring-cyan-700/40" : "bg-zinc-900/95 ring-zinc-700"}`}
             style={{
               left: `${(xToPx((hoverBin.start + hoverBin.end) / 2) / width) * 100}%`,
               top: `${(yToPx(hoverBin.count) / height) * 100}%`,
@@ -199,7 +258,7 @@ export default function PercentHistogram({
             <div className="font-medium">
               {fmtRange(
                 normalized ? ratingRange[0] + hoverBin.start * (ratingRange[1] - ratingRange[0]) : hoverBin.start,
-                normalized ? ratingRange[0] + hoverBin.end * (ratingRange[1] - ratingRange[0]) : hoverBin.end
+                normalized ? ratingRange[0] + hoverBin.end   * (ratingRange[1] - ratingRange[0]) : hoverBin.end
               )}
             </div>
             <div className="text-zinc-300">{fmtNum(hoverBin.count)} users</div>
